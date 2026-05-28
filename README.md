@@ -47,6 +47,8 @@ ledgerflow-bbva/
 ├── requirements.txt       # Dependencias de Python requeridas para desarrollo
 ├── LICENSE                # Archivo de Licencia MIT
 └── README.md              # Documentación técnica del proyecto
+```
+
 🚀 Guía de Inicio (Para Desarrolladores)
 Prerrequisitos
 Asegúrate de contar con Python 3.10 o superior instalado en tu entorno de Windows.
@@ -61,7 +63,9 @@ Crear y activar un entorno virtual:
 
 Bash
 python -m venv venv
+
 # En Windows
+
 venv\Scripts\activate
 Instalar las dependencias del proyecto:
 
@@ -79,8 +83,8 @@ pyinstaller --noconsole --onefile --name="LedgerFlow_BBVA" src/main.py
 El ejecutable independiente se generará automáticamente en la carpeta dist/LedgerFlow_BBVA.exe.
 
 ⚙️ ¿Cómo Funciona la Aplicación? (Arquitectura Interna)
-[PDFs de BBVA] ➔ [Classifier] ➔ 📂 Débito  ➔ [Parser_Debit]  ➔ [Pandas Clean] ➔ 📊 Excel Multitab
-                             ➔ 💳 Crédito ➔ [Parser_Credit] ➔ [Pandas Clean]
+[PDFs de BBVA] ➔ [Classifier] ➔ 📂 Débito ➔ [Parser_Debit] ➔ [Pandas Clean] ➔ 📊 Excel Multitab
+➔ 💳 Crédito ➔ [Parser_Credit] ➔ [Pandas Clean]
 Ingreso de Datos: El usuario selecciona el directorio de origen que contiene los PDFs de BBVA mediante una ventana nativa de selección de carpetas de Windows.
 
 Identificación (classifier.py): El motor lee la primera página de cada archivo. Si detecta cadenas como "LIBRETON NOMINA", canaliza el procesamiento hacia el parser de débito; si detecta "TARJETA ORO" u homólogos de crédito, lo envía al de tarjeta.
@@ -100,5 +104,7 @@ Este proyecto se encuentra distribuido bajo la licencia MIT. Consulta el archivo
 Ivan Ordaz - ordaz.rodriguez.ivan@gmail.com
 
 Enlace del proyecto: https://github.com/IvanOrdaz/LedgerFlow-BBVA.git
+
+```
 
 ```
