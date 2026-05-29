@@ -7,7 +7,7 @@ MESES_ES = {
 }
 
 def get_clean_lines(page):
-    """Agrupa palabras del PDF que comparten la misma altura visual (líneas reales)"""
+    """Agrupa palabras del PDF que comparten la misma altura visual (líneas reales)."""
     words = page.extract_words()
     if not words:
         return []
@@ -15,10 +15,8 @@ def get_clean_lines(page):
     lines = []
     current_top = words[0]['top']
     current_line = []
-    tolerance = 5 # margen en pixeles para textos en la misma fila
-    
     for w in words:
-        if abs(w['top'] - current_top) <= tolerance:
+        if abs(w['top'] - current_top) <= 5:
             current_line.append(w)
         else:
             current_line.sort(key=lambda x: x['x0'])
@@ -34,47 +32,48 @@ def analyze_pdf(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
         if not pdf.pages:
             return None, None
-        
+
         first_page_lines = get_clean_lines(pdf.pages[0])
         full_text = "\n".join(first_page_lines)
-        
+
+        # ── Classify doc type ─────────────────────────────────────────
         doc_type = None
-        if "TARJETA" in full_text.upper() or "PAGO PARA NO GENERAR INTERESES" in full_text.upper():
+        fu = full_text.upper()
+        if "TARJETA" in fu or "PAGO PARA NO GENERAR INTERESES" in fu or "TARJETA ORO" in fu:
             doc_type = "CREDIT"
-        elif "LIBRETON" in full_text.upper() or "SALDO PROMEDIO" in full_text.upper():
+        elif "LIBRETON" in fu or "SALDO PROMEDIO" in fu:
             doc_type = "DEBIT"
         else:
             return None, None
 
+        # ── Extract period ─────────────────────────────────────────────
         period_str = None
-        # Buscar la fecha contable asociada directamente a la línea de 'Corte'
+
         for line in first_page_lines:
-            line_lower = line.lower()
-            if "corte" in line_lower:
+            ll = line.lower()
+            if "corte" in ll:
                 if doc_type == "CREDIT":
-                    match = re.search(r'(\d{1,2})-([a-z]{3})-(\d{4})', line_lower)
-                    if match:
-                        day, month_name, year = match.groups()
-                        period_str = f"{year}-{MESES_ES.get(month_name[:3], '12')}"
+                    m = re.search(r'(\d{1,2})-([a-z]{3})-(\d{4})', ll)
+                    if m:
+                        period_str = f"{m.group(3)}-{MESES_ES.get(m.group(2)[:3], '12')}"
                         break
                 elif doc_type == "DEBIT":
-                    match = re.search(r'(\d{2})/(\d{2})/(\d{4})', line_lower)
-                    if match:
-                        day, month, year = match.groups()
-                        period_str = f"{year}-{month}"
+                    m = re.search(r'(\d{2})/(\d{2})/(\d{4})', ll)
+                    if m:
+                        period_str = f"{m.group(3)}-{m.group(2)}"
                         break
-                        
-        # Respaldo de seguridad si las columnas desalinearon la palabra 'corte'
+
+        # Fallback: scan full text
         if not period_str:
             if doc_type == "CREDIT":
                 matches = re.findall(r'(\d{1,2})-([a-z]{3})-(\d{4})', full_text.lower())
                 if matches:
-                    day, month_name, year = matches[-1]
-                    period_str = f"{year}-{MESES_ES.get(month_name[:3], '12')}"
+                    d, mn, y = matches[-1]
+                    period_str = f"{y}-{MESES_ES.get(mn[:3], '12')}"
             else:
                 matches = re.findall(r'(\d{2})/(\d{2})/(\d{4})', full_text.lower())
                 if matches:
-                    day, month, year = matches[-1]
-                    period_str = f"{year}-{month}"
-                    
+                    d, m, y = matches[-1]
+                    period_str = f"{y}-{m}"
+
         return doc_type, period_str or "9999-12"
